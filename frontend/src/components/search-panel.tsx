@@ -53,7 +53,11 @@ export function SearchPanel() {
       if (result.results.length === 0) {
         toast("没有命中", { description: "换个词，或打开知识库看语料。" })
       } else if (result.engine === "mock") {
-        toast("mock 检索", { description: `${result.results.length} 条 · zg 未接入或 CLI 失败` })
+        toast("mock 检索", {
+          description: result.zgError
+            ? `${result.results.length} 条 · ${result.zgError}`
+            : `${result.results.length} 条 · zg 未安装，关键词打分`,
+        })
       } else {
         toast.success(`zg · ${result.results.length} 条`)
       }
