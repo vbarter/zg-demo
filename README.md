@@ -36,7 +36,12 @@ cd frontend && npm run dev
 | --- | --- | --- |
 | `ZG_ROOT` | `<repo>/sample-kb` | 工作区路径 |
 | `ZG_EMBEDDING` | `local/potion-retrieval-32m` | 转发给 `ZVEC_GREP_EMBEDDING` |
-| `FLASK_PORT` | `5000` | Flask 端口 |
+| `FLASK_PORT` | `5000`（本地） | `python backend/app.py` 端口 |
+| `PORT` | `8080`（生产） | gunicorn 端口 |
+| `FLASK_HOST` | 本地 `127.0.0.1` / 生产 `0.0.0.0` | 监听地址；显式设置则覆盖 |
+| `ZG_DEMO_ENV` / `FLASK_ENV` | 空 | `production` 时托管 `frontend/dist`、关 debug |
+| `FLASK_DEBUG` | 本地 `1` / 生产 `0` | Flask debug |
+| `CORS_ORIGINS` | 本地 Vite origin / 生产 `*` | 逗号分隔白名单，未设则按环境默认 |
 
 可选：装真实 zg 再索引（Node 22+）：
 
@@ -49,6 +54,28 @@ zg query --human "hybrid search BM25" --limit 5
 ```
 
 然后刷新 UI 的「状态」页，`engine` 会从 `mock` 变成 `zg`。
+
+---
+
+## 云主机部署
+
+单进程对外：gunicorn 听 `0.0.0.0:8080`，非 `/api` 走 Vite `frontend/dist`（SPA fallback `index.html`）。mock / zg 逻辑与本地相同。
+
+```bash
+git clone <this-repo> ~/dev/zg-demo
+cd ~/dev/zg-demo
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
+# 浏览器打开 http://SERVER:8080
+```
+
+`deploy.sh` 会建 `backend/.venv`、`pip install`、`npm ci && npm run build`，然后：
+
+```bash
+ZG_DEMO_ENV=production gunicorn --bind 0.0.0.0:${PORT:-8080} --chdir backend app:app
+```
+
+需要本机有 Python 3.11+ 和 Node 22+。防火墙放行 `8080`。要限制跨域：`CORS_ORIGINS=https://kb.example.com`。后台跑可用 `nohup ./scripts/deploy.sh &` 或自己挂 systemd；本仓库不带 Docker。
 
 ---
 
@@ -77,7 +104,7 @@ zg query --human "hybrid search BM25" --limit 5
 
 | Layer | Choice |
 | --- | --- |
-| Backend | Flask 3 + flask-cors, Python 3.11+ |
+| Backend | Flask 3 + flask-cors + gunicorn, Python 3.11+ |
 | Search | `zg` CLI if present, else keyword mock over `sample-kb/` |
 | Frontend | Vite + React + TypeScript |
 | UI | shadcn/ui, Tailwind, monochrome zinc, dark default |
@@ -93,6 +120,7 @@ Local-first KB demo showing Zvec + zvec-grep (`zg`) as workspace search.
 2. `cd frontend && npm install && npm run dev` (proxy `/api` → Flask)
 3. Other terminal: `python3 backend/app.py`
 4. Optional: `npm i -g @zvec/zvec-grep` then `zg index` inside `sample-kb/`
+5. VPS: `./scripts/deploy.sh` then `http://SERVER:8080` (gunicorn + `frontend/dist`)
 
 No secrets. Mock search needs no API keys. DeepSeek Harness is **out of scope** for this MVP; DSH can later attach via zg’s local MCP (`zg server` / `zg install`).
 
