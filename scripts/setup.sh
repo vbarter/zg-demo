@@ -11,6 +11,7 @@ echo "  1) $ROOT/scripts/dev.sh"
 echo "  2) two terminals:"
 echo "       python3 $ROOT/backend/app.py"
 echo "       cd $ROOT/frontend && npm run dev"
+echo "  3) VPS: $ROOT/scripts/deploy.sh   # gunicorn :8080 + frontend/dist"
 echo
 echo "Optional real zg:"
 echo "  npm i -g @zvec/zvec-grep"
