@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+frontend/node_modules/
+frontend/dist/
+
+# zg / zvec
+.zvec-grep/
+**/.zvec-grep/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
+.cache/
